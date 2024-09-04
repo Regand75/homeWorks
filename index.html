@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>homeWorks</title>
+    <link rel="stylesheet" href="styles/style.css">
+    <link rel="stylesheet" href="styles/adaptive.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body>
+
+<div class="header">
+    <div class="container header__container">
+        <div class="header-image">
+            <img class="header__image-img" src="images/homeWorks.png" alt="Logo">
+        </div>
+    </div>
+</div>
+<section class="order">
+    <div class="container order__container">
+        <h1 class="order__title" id="order__title">
+            Get your free account
+        </h1>
+        <div class="order-offer">
+            <p class="order__offer-text">
+                Try homeWorks BUSINESS free for 15 days. Downgrade to Basic (Free Forever) anytime.
+            </p>
+        </div>
+        <form action="#" method="post" class="order__form"
+              id="order__form">
+            <label class="order__label">
+                Full Name
+                <input type="text" name="fullName" class="base-input" id="order__fullName">
+            </label>
+            <label class="order__label">
+                Your username
+                <input type="text" name="username" class="base-input" id="order__username">
+            </label>
+            <label class="order__label">
+                E-mail
+                <input type="email" name="email" class="base-input" id="order__email">
+            </label>
+            <label class="order__label">
+                Password
+                <input type="password" name="password" class="base-input" id="order__password">
+            </label>
+            <label class="order__label">
+                Repeat Password
+                <input type="password" name="repeat-password" class="base-input" id="order__repeat-password">
+            </label>
+            <label class="order__checkbox">
+                <input type="checkbox" name="checkbox" class="order__checkbox-input" id="order__checkbox" checked>
+                <span class="order_checkbox-text">Agree to our Terms of Service and Privacy Statement</span>
+            </label>
+            <div class="order__action">
+                <button type="button" class="button order__button" id="order__button">Sign Up</button>
+            </div>
+        </form>
+        <a href="#" class="order__question" id="order__question">
+            <p class="order__question-text">Already have an account?</p>
+        </a>
+        <div class="order__image">
+            <img src="images/image.png" alt="image" class="order__image-img">
+        </div>
+    </div>
+</section>
+
+<div class="popup-overlay" id="popup-overlay">
+    <div class="popup" id="popup">
+        <div class="popup__content">
+            <p class="popup__text">
+                На вашу почту выслана ссылка, перейдите по ней, чтобы завершить регистрацию
+            </p>
+        </div>
+        <div class="popup__action">
+            <button type="button" class="button popup__button" id="popup__button">OK</button>
+        </div>
+    </div>
+</div>
+
+<script src="scripts/jquery-3.7.1.js"></script>
+<script src="config.js"></script>
+<script src="scripts/script2.js"></script>
+</body>
+</html>
