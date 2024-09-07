@@ -80,11 +80,29 @@ body {
     background-color: #FFFFFB;
 }
 
+.order__error-input {
+    color: #DD3142;
+    display: none;
+}
+
+
+@keyframes blink {
+    0% { box-shadow: 0 0 7px #DD3142; }
+    50% { box-shadow: 0 0 7px transparent; }
+    100% { box-shadow: 0 0 7px #DD3142; }
+}
+
 .order__checkbox {
     display: flex;
     align-items: center;
     text-align: center;
     margin-top: 10px;
+}
+
+.order__checkbox-input.error {
+    border-color: #DD3142;
+    background-color: #ffefef;
+    animation: blink 0.5s linear infinite;
 }
 
 .order_checkbox-text {
@@ -103,8 +121,7 @@ body {
 
 .button {
     box-sizing: border-box;
-    cursor: pointer;
-    background: #DD3142;
+    background: #DD3142B2;
     border-radius: 40px;
     border: none;
     color: #FFFFFF;
@@ -177,6 +194,7 @@ body {
 }
 
 .popup__button {
+    cursor: pointer;
     width: 150px;
     padding: 15px;
     font-size: 16px;

@@ -1,10 +1,15 @@
 window.onload = function () {
     const inputFullName = document.getElementById("order__fullName");
+    const inputErrorFullName = document.getElementById("order__error-fullName");
     const inputUsername = document.getElementById("order__username");
+    const inputErrorUsername = document.getElementById("order__error-username");
     const inputCheckbox = document.getElementById("order__checkbox");
     const inputEmail = document.getElementById("order__email");
+    const inputErrorEmail = document.getElementById("order__error-email");
     const inputPassword = document.getElementById("order__password");
+    const inputErrorPassword = document.getElementById("order__error-password");
     const inputRepeatPassword = document.getElementById("order__repeat-password");
+    const inputErrorRepeatPassword = document.getElementById("order__error-repeat-password");
     const popupOverlay = document.getElementById("popup-overlay");
     const popup = document.getElementById("popup");
     const form = document.getElementById("order__form");
@@ -12,25 +17,145 @@ window.onload = function () {
     const buttonSign = document.getElementById("order__button");
     const linkQuestion = document.getElementById("order__question");
     const titleOrder = document.getElementById('order__title');
+    let hasError = false;
+    let clients = [];
+    const fields = [
+        {
+            field: inputFullName,
+            errorField: inputErrorFullName,
+            message: "Заполните поле 'Full Name'",
+            errorMessage: "'Full Name' может содержать только буквы и пробел",
+            validationRegExp: /^[A-Za-zА-Яа-яЁё]+\s[A-Za-zА-Яа-яЁё]+$/,
+        },
+        {
+            field: inputUsername,
+            errorField: inputErrorUsername,
+            message: "Заполните поле 'Your username'",
+            errorMessage: "Только буквы, цифры, символ подчеркивания и тире",
+            validationRegExp: /^[\wА-Яа-яЁё0-9-]+$/,
+        },
+        {
+            field: inputEmail,
+            errorField: inputErrorEmail,
+            message: "Заполните поле 'E-mail'",
+            errorMessage: "Введите поле 'E-mail' корректно",
+            validationRegExp: /^\w+@[a-zA-Z_]+?\.[a-zA-Z]{2,6}$/,
+        },
+        {
+            field: inputPassword,
+            errorField: inputErrorPassword,
+            message: "Заполните поле 'Password'",
+            errorMessage: "Не менее 8 символов, одной цифры, заглавной буквы и спецсимвола",
+            validationRegExp: /(?=.*\d)(?=.*[!@#$%^&*()])(?=.*[A-Z]).{8,}/,
+        },
+        {
+            field: inputRepeatPassword,
+            errorField: inputErrorRepeatPassword,
+            message: "Заполните поле 'Repeat Password'",
+            errorMessage: "Не верно введен пароль",
+        },
+    ];
 
-    //функция для предотвращения ввода недопустимых символов
-    function preventInvalidInput(e, regex) {
-        if (regex.test(e.key)) {
-            e.preventDefault();
+    // Функция проверки валидности полей на лету при заполнении
+    const validateFields = (fields) => {
+        fields.forEach(({field, errorField, message, errorMessage, validationRegExp}) => {
+            field.addEventListener('input', () => {
+                validateField(field, errorField, message, errorMessage, validationRegExp);
+                // в поле Full Name заменяем начальные буквы на заглавные
+                if (errorField === inputErrorFullName) {
+                    field.value = field.value.replace(/\b\w/g, (match) => {
+                        return match.toUpperCase();
+                    })
+                }
+                checkAllFieldsValid(); // Проверяем, все ли поля валидны
+            });
+        });
+    };
+
+    // Функция проверки валидности поля
+    const validateField = (field, errorField, message, errorMessage, validationRegExp) => {
+        const value = field.value.trim();
+
+        // Если поле пустое, показываем сообщение об обязательном заполнении
+        if (value === '') {
+            showError(errorField, message, field);
         }
+        // Если есть регулярное выражение и поле не соответствует ему, показываем сообщение о неверном формате
+        else if (validationRegExp && !value.match(validationRegExp)) {
+            showError(errorField, errorMessage, field);
+        }
+        // Если значение верное, скрываем сообщение об ошибке
+        else {
+            hideError(errorField, field);
+        }
+    };
+
+    // Функция проверки валидности всех полей для активации кнопки
+    const checkAllFieldsValid = () => {
+        let allValid = true;
+
+        fields.forEach(({field, validationRegExp}) => {
+            const value = field.value.trim();
+            if (value === '' || (validationRegExp && !value.match(validationRegExp))) {
+                allValid = false;
+            }
+        });
+
+        if (allValid) {
+            buttonSign.removeAttribute('disabled');
+            buttonSign.style.backgroundColor = '#DD3142';
+            buttonSign.style.cursor = 'pointer';
+        } else {
+            buttonSign.setAttribute('disabled', 'disabled');
+            buttonSign.style.backgroundColor = '#DD3142B2';
+        }
+    };
+
+    // Функция для показа ошибки
+    const showError = (errorField, message, field) => {
+        errorField.style.display = 'block';
+        errorField.innerText = message;
+        field.style.borderBottomColor = '#DD3142';
     }
 
-    //функция для проверки поля на наличие значения
-    function validateField(field, message) {
-        if (!field.value) {
-            alert(message);
-            return false;
-        }
-        return true;
+    // Функция для скрытия ошибки
+    const hideError = (errorField, field) => {
+        errorField.style.display = 'none';
+        field.style.borderBottomColor = '';
     }
+
+    // Функция проверки совпадения паролей
+    const checkPasswordMatch = () => {
+        if (inputPassword.value !== inputRepeatPassword.value) {
+            showError(inputErrorRepeatPassword, "Пароли не совпадают", inputRepeatPassword);
+            hasError = false;
+        } else {
+            hideError(inputErrorRepeatPassword, inputRepeatPassword);
+            hasError = true;
+        }
+    };
+
+    // Функция запуска анимации если чекбокс не выбран
+    const checkInputCheckbox = () => {
+        inputCheckbox.classList.toggle('error', (!inputCheckbox.checked && hasError));
+    };
+
+    // Функция управления анимацией для чекбокса на лету
+    const validateCheckbox = () => {
+        inputCheckbox.addEventListener('change', () => {
+            checkInputCheckbox();
+        });
+    };
+
+    // Функция показа попапа
+    const togglePopup = (isVisible) => {
+        const display = isVisible ? 'block' : 'none';
+        popup.style.display = display;
+        popupOverlay.style.display = display;
+    };
 
     //функция для имитации переключения формы регистрации на форму входа
-    function switchToLoginForm() {
+    const switchToLoginForm = () => {
         titleOrder.innerHTML = 'Log in to the system';
 
         //удаление полей input
@@ -53,82 +178,67 @@ window.onload = function () {
 
         buttonSign.removeEventListener('click', handleSignUp);
         buttonSign.addEventListener('click', handleLogin);
-    }
+    };
 
-    //функция для обработки клика на кнопку регистрации
-    function handleSignUp(e) {
+    // функция для обработки клика на кнопку регистрации
+    const handleSignUp = (e) => {
         e.preventDefault();
+        checkPasswordMatch(); // запускаем проверку совпадения паролей
+        checkInputCheckbox(); // показывает анимацию если не выбран чекбокс
 
-        //проверка значений в каждом поле, кроме поля 'Repeat Password'
-        const fields = [
-            {field: inputFullName, message: "Заполните поле 'Full Name'"},
-            {field: inputUsername, message: "Заполните поле 'Your username'"},
-            {field: inputEmail, message: "Заполните поле 'E-mail'"},
-            {field: inputPassword, message: "Заполните поле 'Password'"}
-        ];
-        for (const { field, message } of fields) {
-            if (!validateField(field, message)) return;
+        // Записываем данные в localStorage и запускаем pop-up
+        if (inputCheckbox.checked && hasError) {
+            let clientAll = localStorage.getItem('clients');
+            if (clientAll) {
+                clients = JSON.parse(clientAll);
+            }
+            let client = {};
+            fields.forEach(({field}) => {
+                const fieldName = field.name;
+                if (fieldName && fieldName !== 'repeat-password') {
+                    client[fieldName] = field.value;
+                }
+            });
+            clients.push(client);
+            localStorage.setItem('clients', JSON.stringify(clients));
+            console.log(localStorage);
+            togglePopup(true);
         }
-
-        //проверка на количество символов в поле 'Password
-        if (inputPassword.value.length < 8) {
-            alert('Пароль должен содержать не менее 8-ми символов');
-            return;
-        }
-
-        //проверка значение поля 'Repeat Password' и совпадение паролей
-        if (!validateField(inputRepeatPassword, "Заполните поле 'Repeat Password'")) return;
-        if (inputPassword.value !== inputRepeatPassword.value) {
-            alert('Пароли не совпадают');
-            return;
-        }
-
-        //проверка выбран ли чекбокс
-        if (!inputCheckbox.checked) {
-            alert('Вы должны принять условия');
-            return;
-        }
-
-        // Показ pop-up
-        popup.style.display = "block";
-        popupOverlay.style.display = "block";
-    }
+    };
 
     //функция для обработки клика на кнопку входа
-    function handleLogin(e) {
+    const handleLogin = (e) => {
         e.preventDefault();
 
         //проверка значений в оставшихся полях
         const remainingFields = [
-            {field: inputUsername, message: "Заполните поле 'Your username'"},
-            {field: inputPassword, message: "Заполните поле 'Password'"},
+            {field: inputUsername, errorField: inputErrorUsername, message: "Заполните поле 'Your username'"},
+            {field: inputPassword, errorField: inputErrorPassword, message: "Заполните поле 'Password'"},
         ];
-        for (const { field, message } of remainingFields) {
-            if (!validateField(field, message)) return;
+        for (const {field, errorField, message} of remainingFields) {
+            if (!validateField(field, errorField, message)) return;
         }
 
         //выводит сообщение
         alert('Добро пожаловать, ' + document.getElementById("order__username").value + '!')
         form.reset();
-    }
+    };
 
-    //2. запрет ввода в поле input цифр
-    inputFullName.addEventListener('keydown', e => preventInvalidInput(e, /\d/));
-    //3. запрет ввода в поле input точек и запятых
-    inputUsername.addEventListener('keydown', e => preventInvalidInput(e, /[.,]/));
-    //4. выводит сообщение в консоль при изменении значения чекбокса
-    inputCheckbox.addEventListener('change', () => console.log(inputCheckbox.checked ? 'Согласен' : 'Не согласен'));
-    //проверка значений в каждом поле формы регистрации
+    validateFields(fields); // запускаем валидацию всех полей
+    validateCheckbox(); // запускаем управление анимацией чекбокса на лету
+
+    // При нажатии на кнопку проверяется совпадение паролей и чекбокс
     buttonSign.addEventListener('click', handleSignUp);
+
     //при нажатии на ссылку вызываем функцию имитации изменения формы
     linkQuestion.addEventListener('click', switchToLoginForm);
+
     //при нажатии кнопки попапа
     popupButton.addEventListener('click', (e) => {
         if (e.target !== popupButton) return;
-        popup.style.display = "none";
-        popupOverlay.style.display = "none";
+        togglePopup(false);
         form.reset();
         switchToLoginForm(); //вызываем функцию имитации изменения формы
-    })
-}
+    });
+};
 

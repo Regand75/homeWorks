@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <title>homeWorks</title>
     <link rel="stylesheet" href="styles/style.css">
-    <link rel="stylesheet" href="styles/adaptive.css">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
 <body>
@@ -31,29 +30,34 @@
             <label class="order__label">
                 Full Name
                 <input type="text" name="fullName" class="base-input" id="order__fullName">
+                <div class="order__error-input hidden" id="order__error-fullName"></div>
             </label>
             <label class="order__label">
                 Your username
                 <input type="text" name="username" class="base-input" id="order__username">
+                <div class="order__error-input" id="order__error-username"></div>
             </label>
             <label class="order__label">
                 E-mail
                 <input type="email" name="email" class="base-input" id="order__email">
+                <div class="order__error-input" id="order__error-email"></div>
             </label>
             <label class="order__label">
                 Password
                 <input type="password" name="password" class="base-input" id="order__password">
+                <div class="order__error-input" id="order__error-password"></div>
             </label>
             <label class="order__label">
                 Repeat Password
                 <input type="password" name="repeat-password" class="base-input" id="order__repeat-password">
+                <div class="order__error-input" id="order__error-repeat-password"></div>
             </label>
             <label class="order__checkbox">
                 <input type="checkbox" name="checkbox" class="order__checkbox-input" id="order__checkbox" checked>
                 <span class="order_checkbox-text">Agree to our Terms of Service and Privacy Statement</span>
             </label>
             <div class="order__action">
-                <button type="button" class="button order__button" id="order__button">Sign Up</button>
+                <button type="button" class="button order__button" id="order__button" disabled>Sign Up</button>
             </div>
         </form>
         <a href="#" class="order__question" id="order__question">
@@ -78,8 +82,7 @@
     </div>
 </div>
 
-<script src="scripts/jquery-3.7.1.js"></script>
-<script src="config.js"></script>
-<script src="scripts/script2.js"></script>
+<!--<script src="scripts/jquery-3.7.1.js"></script>-->
+<script src="scripts/script.js"></script>
 </body>
 </html>
