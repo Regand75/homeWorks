@@ -18,7 +18,6 @@ window.onload = function () {
     const linkQuestion = document.getElementById("order__question-text");
     const titleOrder = document.getElementById('order__title');
     let passwordMatch = false;
-    const clientsLocalStorage = JSON.parse(localStorage.getItem('clients')) || [];
     const fields = [
         {
             field: inputFullName,
@@ -87,7 +86,8 @@ window.onload = function () {
     // Функция проверки валидности поля на странице регистрации
     const validateField = (field, errorField, message, errorMessage, validationRegExp, notFoundMessage) => {
         const value = field.value;
-        const checkUsernameMatch = clientsLocalStorage.find(item => item.username.toLowerCase() === inputUsername.value.toLowerCase());
+        let dataClients = JSON.parse(localStorage.getItem('clients')) || [];
+        const checkUsernameMatch = dataClients.find(item => item.username.toLowerCase() === inputUsername.value.toLowerCase());
         // Если поле пустое, показываем сообщение об обязательном заполнении
         if (value === '') {
             showError(errorField, message, field);
@@ -95,7 +95,9 @@ window.onload = function () {
         // Если есть регулярное выражение и поле не соответствует ему, показываем сообщение о неверном формате
         else if (validationRegExp && !value.match(validationRegExp)) {
             showError(errorField, errorMessage, field);
-        } else if (field === inputUsername && checkUsernameMatch) {
+        }
+        // Если username уже существует, выводит сообщение
+        else if (field === inputUsername && checkUsernameMatch) {
             showError(errorField, notFoundMessage, field);
         }
         // Если значение верное, скрываем сообщение об ошибке
@@ -168,13 +170,13 @@ window.onload = function () {
         errorField.style.display = 'block';
         errorField.innerText = message;
         field.style.borderBottomColor = '#DD3142';
-    }
+    };
 
     // Функция для скрытия ошибки
     const hideError = (errorField, field) => {
         errorField.style.display = 'none';
         field.style.borderBottomColor = '';
-    }
+    };
 
     // Функция проверки совпадения паролей
     const checkPasswordMatch = () => {
@@ -199,7 +201,7 @@ window.onload = function () {
         });
     };
 
-    // Функция показа попапа
+    // Функция показа pop-up
     const togglePopup = (isVisible) => {
         const display = isVisible ? 'block' : 'none';
         popup.style.display = display;
@@ -209,18 +211,15 @@ window.onload = function () {
     // Функция перезагрузки страницы
     const reloadPage = () => {
         location.reload();
-    }
+    };
 
     //функция для имитации переключения формы регистрации на форму входа
     const switchToLoginForm = () => {
         form.reset();
         deActiveButton(buttonSign);
-        inputErrorUsername.style.display = 'none';
-        inputErrorPassword.style.display = 'none';
-        inputUsername.style.borderBottomColor = '';
-        inputPassword.style.borderBottomColor = '';
+        hideError (inputErrorUsername, inputUsername);
+        hideError (inputErrorPassword, inputPassword);
         titleOrder.innerHTML = 'Log in to the system';
-
         //удаление полей input
         document.querySelectorAll('input').forEach((item) => {
             if (item.id === 'order__username' || item.id === 'order__password') {
@@ -228,39 +227,34 @@ window.onload = function () {
             }
             item.parentElement.remove();
         });
-
-        //замена текста в кнопке
-        buttonSign.innerText = 'Sign In';
-
-        //Изменение ссылки
-        linkQuestion.innerText = 'Registration';
-
+        buttonSign.innerText = 'Sign In'; //замена текста в кнопке
+        linkQuestion.innerText = 'Registration'; //Изменение ссылки
         //добавление отступов для выравнивания контента
         document.getElementsByClassName('order__image')[0].style.marginTop = '0';
         titleOrder.style.marginTop = '80px';
-
         // замена слушателя на кнопке
         buttonSign.removeEventListener('click', handleSignUp);
         buttonSign.addEventListener('click', handleLogin);
-
         // замена слушателя на ссылке
         linkQuestion.removeEventListener('click', switchToLoginForm);
         linkQuestion.addEventListener('click', reloadPage);
-
         validateFieldsLoginPage(fieldsLoginPage); // запускаем валидацию полей для формы входа
     };
 
+    // Функция имитации перехода в личный кабинет
+    const switchToPersonalAccount = () => {
+        titleOrder.innerHTML = 'Log in to the system';
+    };
 
     // функция для обработки клика на кнопку регистрации
     const handleSignUp = (e) => {
         e.preventDefault();
         checkPasswordMatch(); // запускаем проверку совпадения паролей
         checkInputCheckbox(); // показывает анимацию если не выбран чекбокс
-
         // Записываем данные в localStorage и запускаем pop-up
         if (inputCheckbox.checked && passwordMatch) {
-            let clientAll = localStorage.getItem('clients');
-            let clients = clientAll ? JSON.parse(clientAll) : [];
+            // let clientAll = localStorage.getItem('clients');
+            let clients = JSON.parse(localStorage.getItem('clients')) || [];
             const checkEmailMatch = clients.find(item => item.email === inputEmail.value);
             if (!checkEmailMatch) {
                 let client = {};
@@ -272,7 +266,6 @@ window.onload = function () {
                 });
                 clients.push(client);
                 localStorage.setItem('clients', JSON.stringify(clients));
-
                 togglePopup(true); //запускаем pop-up
             } else {
                 showError(inputErrorEmail, 'Такая почта уже используется', inputEmail);
@@ -283,8 +276,7 @@ window.onload = function () {
     //функция для обработки клика на кнопку входа
     const handleLogin = (e, fieldsLoginPage) => {
         e.preventDefault();
-        const clientsLocalStorage = JSON.parse(localStorage.getItem('clients')) || [];
-
+        let clientsLocalStorage = JSON.parse(localStorage.getItem('clients')) || [];
         // Найти индекс элемента с совпадающим username
         const indexUsername = clientsLocalStorage.findIndex((item) => {
             return item.username.trim().toLowerCase() === inputUsername.value.trim().toLowerCase()
@@ -305,7 +297,7 @@ window.onload = function () {
     validateFields(fields); // запускаем валидацию всех полей
     validateCheckbox(); // запускаем управление анимацией чекбокса на лету
 
-    // При нажатии на кнопку проверяется совпадение паролей и чекбокс
+    // При нажатии на кнопку проверяется совпадение паролей и чекбокс, записываются данные в localStorage
     buttonSign.addEventListener('click', handleSignUp);
 
     //при нажатии на ссылку вызываем функцию имитации изменения формы
