@@ -14,9 +14,12 @@ window.onload = function () {
     const popup = document.getElementById("popup");
     const form = document.getElementById("order__form");
     const popupButton = document.getElementById("popup__button");
+    const orderAction = document.getElementById("order__action");
     const buttonSign = document.getElementById("order__button");
     const linkQuestion = document.getElementById("order__question-text");
     const titleOrder = document.getElementById('order__title');
+    const offerOrderText = document.getElementById('order__offer-text');
+    let clients = [];
     let passwordMatch = false;
     const fields = [
         {
@@ -59,6 +62,9 @@ window.onload = function () {
     // Новый массив с двумя полями для страницы входа
     const fieldsLoginPage = fields.filter((item) => item.field === inputUsername || item.field === inputPassword);
 
+    // Функция считывания данных из LocalStorage
+    const getItemLocalStorage = () => JSON.parse(localStorage.getItem('clients')) || [];
+
     // Функция проверки валидности полей страницы регистрации на лету при заполнении
     const validateFields = (fields) => {
         fields.forEach(({field, errorField, message, errorMessage, validationRegExp, notFoundMessage}) => {
@@ -86,8 +92,8 @@ window.onload = function () {
     // Функция проверки валидности поля на странице регистрации
     const validateField = (field, errorField, message, errorMessage, validationRegExp, notFoundMessage) => {
         const value = field.value;
-        let dataClients = JSON.parse(localStorage.getItem('clients')) || [];
-        const checkUsernameMatch = dataClients.find(item => item.username.toLowerCase() === inputUsername.value.toLowerCase());
+        clients = getItemLocalStorage();
+        const checkUsernameMatch = clients.find(item => item.username.toLowerCase() === inputUsername.value.toLowerCase());
         // Если поле пустое, показываем сообщение об обязательном заполнении
         if (value === '') {
             showError(errorField, message, field);
@@ -217,8 +223,8 @@ window.onload = function () {
     const switchToLoginForm = () => {
         form.reset();
         deActiveButton(buttonSign);
-        hideError (inputErrorUsername, inputUsername);
-        hideError (inputErrorPassword, inputPassword);
+        hideError(inputErrorUsername, inputUsername);
+        hideError(inputErrorPassword, inputPassword);
         titleOrder.innerHTML = 'Log in to the system';
         //удаление полей input
         document.querySelectorAll('input').forEach((item) => {
@@ -243,7 +249,22 @@ window.onload = function () {
 
     // Функция имитации перехода в личный кабинет
     const switchToPersonalAccount = () => {
-        titleOrder.innerHTML = 'Log in to the system';
+        clients = getItemLocalStorage();
+        const indexUFullName = clients.findIndex((item) => {
+            return item.username.trim().toLowerCase() === inputUsername.value.trim().toLowerCase()
+        });
+        titleOrder.innerHTML = `Welcome, ${clients[indexUFullName].fullName}!`;
+        titleOrder.style.textAlign = 'center';
+        offerOrderText.remove();
+        orderAction.style.marginRight = '0';
+        buttonSign.innerText = 'Exit';
+        document.querySelectorAll('input').forEach((item) => {
+            item.parentElement.remove();
+        });
+        linkQuestion.remove();
+        // замена слушателя на кнопке
+        buttonSign.removeEventListener('click', handleLogin);
+        buttonSign.addEventListener('click', handleExit);
     };
 
     // функция для обработки клика на кнопку регистрации
@@ -253,8 +274,7 @@ window.onload = function () {
         checkInputCheckbox(); // показывает анимацию если не выбран чекбокс
         // Записываем данные в localStorage и запускаем pop-up
         if (inputCheckbox.checked && passwordMatch) {
-            // let clientAll = localStorage.getItem('clients');
-            let clients = JSON.parse(localStorage.getItem('clients')) || [];
+            let clients = getItemLocalStorage();
             const checkEmailMatch = clients.find(item => item.email === inputEmail.value);
             if (!checkEmailMatch) {
                 let client = {};
@@ -276,9 +296,9 @@ window.onload = function () {
     //функция для обработки клика на кнопку входа
     const handleLogin = (e, fieldsLoginPage) => {
         e.preventDefault();
-        let clientsLocalStorage = JSON.parse(localStorage.getItem('clients')) || [];
+        clients = getItemLocalStorage();
         // Найти индекс элемента с совпадающим username
-        const indexUsername = clientsLocalStorage.findIndex((item) => {
+        const indexUsername = clients.findIndex((item) => {
             return item.username.trim().toLowerCase() === inputUsername.value.trim().toLowerCase()
         });
         // Проверка существует ли пользователь с таким username
@@ -286,12 +306,18 @@ window.onload = function () {
             showError(inputErrorUsername, 'Такой пользователь не зарегистрирован', inputUsername);
         } else {
             hideError(inputErrorUsername, inputUsername);
-            if (clientsLocalStorage[indexUsername].password !== inputPassword.value) {
+            if (clients[indexUsername].password !== inputPassword.value) {
                 showError(inputErrorPassword, 'Неверный пароль', inputPassword);
             } else {
-                alert('Ok');
+                switchToPersonalAccount();
             }
         }
+    };
+
+    //функция для обработки клика на кнопку выхода
+    const handleExit = (e, fieldsLoginPage) => {
+        e.preventDefault();
+        reloadPage(); // перегружаем страницу
     };
 
     validateFields(fields); // запускаем валидацию всех полей
