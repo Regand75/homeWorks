@@ -15,9 +15,9 @@ window.onload = function () {
     const form = document.getElementById("order__form");
     const popupButton = document.getElementById("popup__button");
     const buttonSign = document.getElementById("order__button");
-    const linkQuestion = document.getElementById("order__question");
+    const linkQuestion = document.getElementById("order__question-text");
     const titleOrder = document.getElementById('order__title');
-    let hasError = false;
+    let passwordMatch = false;
     let clients = [];
     const fields = [
         {
@@ -25,7 +25,7 @@ window.onload = function () {
             errorField: inputErrorFullName,
             message: "Заполните поле 'Full Name'",
             errorMessage: "'Full Name' может содержать только буквы и пробел",
-            validationRegExp: /^[A-Za-zА-Яа-яЁё]+\s[A-Za-zА-Яа-яЁё]+$/,
+            validationRegExp: /^[A-Za-zА-Яа-яЁё]+\s{1}[A-Za-zА-Яа-яЁё]+$/,
         },
         {
             field: inputUsername,
@@ -33,6 +33,7 @@ window.onload = function () {
             message: "Заполните поле 'Your username'",
             errorMessage: "Только буквы, цифры, символ подчеркивания и тире",
             validationRegExp: /^[\wА-Яа-яЁё0-9-]+$/,
+            notFoundMessage: "Такой пользователь не зарегистрирован"
         },
         {
             field: inputEmail,
@@ -45,8 +46,9 @@ window.onload = function () {
             field: inputPassword,
             errorField: inputErrorPassword,
             message: "Заполните поле 'Password'",
-            errorMessage: "Не менее 8 символов, одной цифры, заглавной буквы и спецсимвола",
+            errorMessage: "Не менее 8 символов, 1-1 цифры, заглавной буквы и спецсимвола",
             validationRegExp: /(?=.*\d)(?=.*[!@#$%^&*()])(?=.*[A-Z]).{8,}/,
+            notFoundMessage: "Неверный пароль"
         },
         {
             field: inputRepeatPassword,
@@ -56,26 +58,36 @@ window.onload = function () {
         },
     ];
 
-    // Функция проверки валидности полей на лету при заполнении
+    // Новый массив с двумя полями для страницы входа
+    const fieldsLoginPage = fields.filter((item) => item.field === inputUsername || item.field === inputPassword);
+
+    // Функция проверки валидности полей страницы регистрации на лету при заполнении
     const validateFields = (fields) => {
         fields.forEach(({field, errorField, message, errorMessage, validationRegExp}) => {
             field.addEventListener('input', () => {
-                validateField(field, errorField, message, errorMessage, validationRegExp);
+                validateField(field, errorField, message, errorMessage, validationRegExp); // проверка валидности каждого поля
                 // в поле Full Name заменяем начальные буквы на заглавные
                 if (errorField === inputErrorFullName) {
-                    field.value = field.value.replace(/\b\w/g, (match) => {
-                        return match.toUpperCase();
-                    })
+                    field.value = field.value.replace(/(^|\s)[a-zа-яё]/g, (match) => match.toUpperCase());
                 }
-                checkAllFieldsValid(); // Проверяем, все ли поля валидны
+                checkAllFieldsValid(); // проверяем, все ли поля валидны, чтобы активировать кнопку
             });
         });
     };
 
-    // Функция проверки валидности поля
-    const validateField = (field, errorField, message, errorMessage, validationRegExp) => {
-        const value = field.value.trim();
+    // Функция проверки валидности полей страницы входа на лету при заполнении
+    const validateFieldsLoginPage = (fieldsLoginPage) => {
+        fieldsLoginPage.forEach(({field, errorField, message}) => {
+            field.addEventListener('input', () => {
+                validateFieldLoginPage(field, errorField, message); // проверка валидности каждого поля
+                checkAllFieldsLoginPageValid(); // проверяем, все ли поля валидны, чтобы активировать кнопку
+            });
+        });
+    };
 
+    // Функция проверки валидности поля на странице регистрации
+    const validateField = (field, errorField, message, errorMessage, validationRegExp) => {
+        const value = field.value;
         // Если поле пустое, показываем сообщение об обязательном заполнении
         if (value === '') {
             showError(errorField, message, field);
@@ -90,25 +102,63 @@ window.onload = function () {
         }
     };
 
-    // Функция проверки валидности всех полей для активации кнопки
+    // Функция проверки валидности поля на странице входа
+    const validateFieldLoginPage = (field, errorField, message) => {
+        const value = field.value;
+        // Если поле пустое, показываем сообщение об обязательном заполнении
+        if (value === '') {
+            showError(errorField, message, field);
+        }
+        // Если значение верное, скрываем сообщение об ошибке
+        else {
+            hideError(errorField, field);
+        }
+    };
+
+    // Функция проверки валидности всех полей для активации кнопки Sign Up
     const checkAllFieldsValid = () => {
         let allValid = true;
-
         fields.forEach(({field, validationRegExp}) => {
-            const value = field.value.trim();
+            const value = field.value;
             if (value === '' || (validationRegExp && !value.match(validationRegExp))) {
                 allValid = false;
             }
         });
-
         if (allValid) {
-            buttonSign.removeAttribute('disabled');
-            buttonSign.style.backgroundColor = '#DD3142';
-            buttonSign.style.cursor = 'pointer';
+            activeButton(buttonSign);
         } else {
-            buttonSign.setAttribute('disabled', 'disabled');
-            buttonSign.style.backgroundColor = '#DD3142B2';
+            deActiveButton(buttonSign);
         }
+    };
+
+    // Функция проверки валидности всех полей для активации кнопки Sign In
+    const checkAllFieldsLoginPageValid = () => {
+        let allValid = true;
+        fieldsLoginPage.forEach(({field}) => {
+            const value = field.value;
+            if (value === '') {
+                allValid = false;
+            }
+        });
+        if (allValid) {
+            activeButton(buttonSign);
+        } else {
+            deActiveButton(buttonSign);
+        }
+    };
+
+    // Функция для активации кнопки
+    const activeButton = (buttonSign) => {
+        buttonSign.removeAttribute('disabled');
+        buttonSign.style.backgroundColor = '#DD3142';
+        buttonSign.style.cursor = 'pointer';
+    };
+
+    // Функция для деактивации кнопки
+    const deActiveButton = (buttonSign) => {
+        buttonSign.setAttribute('disabled', 'disabled');
+        buttonSign.style.backgroundColor = '#DD3142B2';
+        buttonSign.style.cursor = 'none';
     };
 
     // Функция для показа ошибки
@@ -128,16 +178,16 @@ window.onload = function () {
     const checkPasswordMatch = () => {
         if (inputPassword.value !== inputRepeatPassword.value) {
             showError(inputErrorRepeatPassword, "Пароли не совпадают", inputRepeatPassword);
-            hasError = false;
+            passwordMatch = false;
         } else {
             hideError(inputErrorRepeatPassword, inputRepeatPassword);
-            hasError = true;
+            passwordMatch = true;
         }
     };
 
     // Функция запуска анимации если чекбокс не выбран
     const checkInputCheckbox = () => {
-        inputCheckbox.classList.toggle('error', (!inputCheckbox.checked && hasError));
+        inputCheckbox.classList.toggle('error', (!inputCheckbox.checked && passwordMatch));
     };
 
     // Функция управления анимацией для чекбокса на лету
@@ -154,8 +204,19 @@ window.onload = function () {
         popupOverlay.style.display = display;
     };
 
+    // Функция перезагрузки страницы
+    const reloadPage = () => {
+        location.reload();
+    }
+
     //функция для имитации переключения формы регистрации на форму входа
     const switchToLoginForm = () => {
+        form.reset();
+        deActiveButton(buttonSign);
+        inputErrorUsername.style.display = 'none';
+        inputErrorPassword.style.display = 'none';
+        inputUsername.style.borderBottomColor = '';
+        inputPassword.style.borderBottomColor = '';
         titleOrder.innerHTML = 'Log in to the system';
 
         //удаление полей input
@@ -169,15 +230,22 @@ window.onload = function () {
         //замена текста в кнопке
         buttonSign.innerText = 'Sign In';
 
-        //удаление ссылки
-        linkQuestion.remove();
+        //Изменение ссылки
+        linkQuestion.innerText = 'Registration';
 
         //добавление отступов для выравнивания контента
         document.getElementsByClassName('order__image')[0].style.marginTop = '0';
         titleOrder.style.marginTop = '80px';
 
+        // замена слушателя на кнопке
         buttonSign.removeEventListener('click', handleSignUp);
         buttonSign.addEventListener('click', handleLogin);
+
+        // замена слушателя на ссылке
+        linkQuestion.removeEventListener('click', switchToLoginForm);
+        linkQuestion.addEventListener('click', reloadPage);
+
+        validateFieldsLoginPage(fieldsLoginPage); // запускаем валидацию полей для формы входа
     };
 
     // функция для обработки клика на кнопку регистрации
@@ -187,10 +255,12 @@ window.onload = function () {
         checkInputCheckbox(); // показывает анимацию если не выбран чекбокс
 
         // Записываем данные в localStorage и запускаем pop-up
-        if (inputCheckbox.checked && hasError) {
+        if (inputCheckbox.checked && passwordMatch) {
             let clientAll = localStorage.getItem('clients');
+            console.log(`clientAll: ${clientAll}`);
             if (clientAll) {
                 clients = JSON.parse(clientAll);
+                console.log(`clients: ${clients}`);
             }
             let client = {};
             fields.forEach(({field}) => {
@@ -201,27 +271,31 @@ window.onload = function () {
             });
             clients.push(client);
             localStorage.setItem('clients', JSON.stringify(clients));
-            console.log(localStorage);
-            togglePopup(true);
+
+            togglePopup(true); //запускаем pop-up
         }
     };
 
     //функция для обработки клика на кнопку входа
-    const handleLogin = (e) => {
+    const handleLogin = (e, fieldsLoginPage) => {
         e.preventDefault();
+        const clientsLocalStorage = JSON.parse(localStorage.getItem('clients')) || [];
 
-        //проверка значений в оставшихся полях
-        const remainingFields = [
-            {field: inputUsername, errorField: inputErrorUsername, message: "Заполните поле 'Your username'"},
-            {field: inputPassword, errorField: inputErrorPassword, message: "Заполните поле 'Password'"},
-        ];
-        for (const {field, errorField, message} of remainingFields) {
-            if (!validateField(field, errorField, message)) return;
+        // Найти индекс элемента с совпадающим username
+        const indexUsername = clientsLocalStorage.findIndex((item) => {
+            return item.username.trim().toLowerCase() === inputUsername.value.trim().toLowerCase()
+        });
+        // Проверка существует ли пользователь с таким username
+        if (indexUsername === -1) {
+            showError(inputErrorUsername, 'Такой пользователь не зарегистрирован', inputUsername);
+        } else {
+            hideError(inputErrorUsername, inputUsername);
+            if (clientsLocalStorage[indexUsername].password !== inputPassword.value) {
+                showError(inputErrorPassword, 'Неверный пароль', inputPassword);
+            } else {
+                alert('Ok');
+            }
         }
-
-        //выводит сообщение
-        alert('Добро пожаловать, ' + document.getElementById("order__username").value + '!')
-        form.reset();
     };
 
     validateFields(fields); // запускаем валидацию всех полей
@@ -233,11 +307,10 @@ window.onload = function () {
     //при нажатии на ссылку вызываем функцию имитации изменения формы
     linkQuestion.addEventListener('click', switchToLoginForm);
 
-    //при нажатии кнопки попапа
+    //при нажатии кнопки pop-up
     popupButton.addEventListener('click', (e) => {
         if (e.target !== popupButton) return;
-        togglePopup(false);
-        form.reset();
+        togglePopup(false); // скрываем pop-up
         switchToLoginForm(); //вызываем функцию имитации изменения формы
     });
 };
