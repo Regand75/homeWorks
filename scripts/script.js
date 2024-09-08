@@ -18,7 +18,7 @@ window.onload = function () {
     const linkQuestion = document.getElementById("order__question-text");
     const titleOrder = document.getElementById('order__title');
     let passwordMatch = false;
-    let clients = [];
+    const clientsLocalStorage = JSON.parse(localStorage.getItem('clients')) || [];
     const fields = [
         {
             field: inputFullName,
@@ -33,7 +33,7 @@ window.onload = function () {
             message: "Заполните поле 'Your username'",
             errorMessage: "Только буквы, цифры, символ подчеркивания и тире",
             validationRegExp: /^[\wА-Яа-яЁё0-9-]+$/,
-            notFoundMessage: "Такой пользователь не зарегистрирован"
+            notFoundMessage: "Такой пользователь уже существует"
         },
         {
             field: inputEmail,
@@ -48,7 +48,6 @@ window.onload = function () {
             message: "Заполните поле 'Password'",
             errorMessage: "Не менее 8 символов, 1-1 цифры, заглавной буквы и спецсимвола",
             validationRegExp: /(?=.*\d)(?=.*[!@#$%^&*()])(?=.*[A-Z]).{8,}/,
-            notFoundMessage: "Неверный пароль"
         },
         {
             field: inputRepeatPassword,
@@ -63,11 +62,11 @@ window.onload = function () {
 
     // Функция проверки валидности полей страницы регистрации на лету при заполнении
     const validateFields = (fields) => {
-        fields.forEach(({field, errorField, message, errorMessage, validationRegExp}) => {
+        fields.forEach(({field, errorField, message, errorMessage, validationRegExp, notFoundMessage}) => {
             field.addEventListener('input', () => {
-                validateField(field, errorField, message, errorMessage, validationRegExp); // проверка валидности каждого поля
+                validateField(field, errorField, message, errorMessage, validationRegExp, notFoundMessage); // проверка валидности каждого поля
                 // в поле Full Name заменяем начальные буквы на заглавные
-                if (errorField === inputErrorFullName) {
+                if (field === inputFullName) {
                     field.value = field.value.replace(/(^|\s)[a-zа-яё]/g, (match) => match.toUpperCase());
                 }
                 checkAllFieldsValid(); // проверяем, все ли поля валидны, чтобы активировать кнопку
@@ -86,8 +85,9 @@ window.onload = function () {
     };
 
     // Функция проверки валидности поля на странице регистрации
-    const validateField = (field, errorField, message, errorMessage, validationRegExp) => {
+    const validateField = (field, errorField, message, errorMessage, validationRegExp, notFoundMessage) => {
         const value = field.value;
+        const checkUsernameMatch = clientsLocalStorage.find(item => item.username.toLowerCase() === inputUsername.value.toLowerCase());
         // Если поле пустое, показываем сообщение об обязательном заполнении
         if (value === '') {
             showError(errorField, message, field);
@@ -95,6 +95,8 @@ window.onload = function () {
         // Если есть регулярное выражение и поле не соответствует ему, показываем сообщение о неверном формате
         else if (validationRegExp && !value.match(validationRegExp)) {
             showError(errorField, errorMessage, field);
+        } else if (field === inputUsername && checkUsernameMatch) {
+            showError(errorField, notFoundMessage, field);
         }
         // Если значение верное, скрываем сообщение об ошибке
         else {
@@ -178,10 +180,10 @@ window.onload = function () {
     const checkPasswordMatch = () => {
         if (inputPassword.value !== inputRepeatPassword.value) {
             showError(inputErrorRepeatPassword, "Пароли не совпадают", inputRepeatPassword);
-            passwordMatch = false;
+            return passwordMatch = false;
         } else {
             hideError(inputErrorRepeatPassword, inputRepeatPassword);
-            passwordMatch = true;
+            return passwordMatch = true;
         }
     };
 
@@ -248,6 +250,7 @@ window.onload = function () {
         validateFieldsLoginPage(fieldsLoginPage); // запускаем валидацию полей для формы входа
     };
 
+
     // функция для обработки клика на кнопку регистрации
     const handleSignUp = (e) => {
         e.preventDefault();
@@ -257,22 +260,23 @@ window.onload = function () {
         // Записываем данные в localStorage и запускаем pop-up
         if (inputCheckbox.checked && passwordMatch) {
             let clientAll = localStorage.getItem('clients');
-            console.log(`clientAll: ${clientAll}`);
-            if (clientAll) {
-                clients = JSON.parse(clientAll);
-                console.log(`clients: ${clients}`);
-            }
-            let client = {};
-            fields.forEach(({field}) => {
-                const fieldName = field.name;
-                if (fieldName && fieldName !== 'repeat-password') {
-                    client[fieldName] = field.value;
-                }
-            });
-            clients.push(client);
-            localStorage.setItem('clients', JSON.stringify(clients));
+            let clients = clientAll ? JSON.parse(clientAll) : [];
+            const checkEmailMatch = clients.find(item => item.email === inputEmail.value);
+            if (!checkEmailMatch) {
+                let client = {};
+                fields.forEach(({field}) => {
+                    const fieldName = field.name;
+                    if (fieldName && fieldName !== 'repeat-password') {
+                        client[fieldName] = field.value;
+                    }
+                });
+                clients.push(client);
+                localStorage.setItem('clients', JSON.stringify(clients));
 
-            togglePopup(true); //запускаем pop-up
+                togglePopup(true); //запускаем pop-up
+            } else {
+                showError(inputErrorEmail, 'Такая почта уже используется', inputEmail);
+            }
         }
     };
 
